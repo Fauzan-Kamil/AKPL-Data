@@ -1,6 +1,7 @@
-# AKPL-Data
-Data di dalam repo ini adalah data untuk tugas besar pada matakuliah analisis kebutuhan perangkat lunak
-## Data asli bisa di kunjungi 
-Padi = https://www.kaggle.com/minhhuy2810/rice-diseases-image-dataset
+# Presensi Face Recognition
+Presensi realtime, hasil nya masih berbentuk csv 
+## Jika data wajah ada di database
 
-Jagung = https://www.kaggle.com/smaranjitghose/corn-or-maize-leaf-disease-dataset
+## Laporan Presensi
+
+## Jika data wajah tidak ada di data base
