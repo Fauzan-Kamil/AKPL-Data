@@ -1,0 +1,3 @@
+Create Table Group_C (No_Peserta varchar(50), Nama varchar(100), 
+                      Jurusan varchar(100),
+                     Primary Key(`No_Peserta`));

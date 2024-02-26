@@ -1,111 +1,121 @@
-#Start Library
+# Start Library
 from importlib.resources import path
 import cv2
 import face_recognition
 import numpy as np
 import os
 from datetime import datetime
-#End Library
+# End Library
 
-#Start Pengenalan data wajah
-path="data"
-images=[]
-name=[]
-myList=os.listdir(path)
+# Start Pengenalan data wajah
+path = "data"
+images = []
+name = []
+myList = os.listdir(path)
 print("\nLoading....\n")
-#print(myList)
+
+# print(myList)
 for person in myList:
-    Image=cv2.imread(f"{path}/{person}")
-    #cv2.imshow("Foto",Image)
-    #cv2.waitKey(0)
+    Image = cv2.imread(f"{path}/{person}")
+    # cv2.imshow("Foto",Image)
+    # cv2.waitKey(0)
     images.append(Image)
     name.append(os.path.splitext(person)[0])
-#print(images)
-#print(name)
-#End Pengenalan data wajah
+# print(images)
+# print(name)
+# End Pengenalan data wajah
 
-#Start Training Wajah
+# Start Training Wajah
 def findEncodings(images):
-    encodeList=[]
-    #Perulangan untuk mengambil data wajah
+    encodeList = []
+    # Perulangan untuk mengambil data wajah
     for img in images:
-        img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-        encode=face_recognition.face_encodings(img)[0]
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        encode = face_recognition.face_encodings(img)[0]
         encodeList.append(encode)
     return encodeList
 
-encodeKnownImage=findEncodings(images)
-#print(encodeKnownImage)
+encodeKnownImage = findEncodings(images)
+# print(encodeKnownImage)
 print("\nPresensi Berhasil Dijalankan....\n")
-#End Training Wajah
+# End Training Wajah
 
-#Start Reporting / Laporan presensi
+# Start Reporting / Laporan presensi
 def markAttendance(name):
-    with open('laporan.csv','r+') as f:
-        myDataList=f.readlines()
-        nameList=[]
+    with open('laporan.csv', 'a+') as f:
+        # Cek apakah laporan sudah ada
+        if os.path.getsize('laporan.csv') == 0:
+            # Tulis header laporan jika belum ada
+            f.write("Name,Time,Tanggal,Keterangan\n")
+        myDataList = f.readlines()
+        nameList = []
         for line in myDataList:
-            entry=line.split(',')
+            entry = line.split(',')
             nameList.append(entry[0])
         if name not in nameList:
-            now=datetime.now()
-            dtString=now.strftime('%H:%M:%S')
-            dtTanggal=now.strftime('%Y-%b-%d')
-            f.writelines(f'\n{name},{dtString},{dtTanggal}')
-#End Reporting / Laporan presensi
+            now = datetime.now()
+            dtString = now.strftime('%H:%M:%S')
+            dtTanggal = now.strftime('%Y-%b-%d')
+            f.writelines(f'{name},{dtString},{dtTanggal},Hadir\n')  # Perbaikan di sini
+# End Reporting / Laporan presensi
 
-#Start Akses Webcam dan Identifikasi Wajah
-cap=cv2.VideoCapture(0)
-#cap.set(3,1080)
-#cap.set(4,580)
+# Start Akses Webcam dan Identifikasi Wajah
+cap = cv2.VideoCapture(0)
+# cap.set(3,1080)
+# cap.set(4,580)
+
+# Variabel untuk menandai apakah laporan sudah dibuat
+laporan_dibuat = False
+
 while True:
-    succes,img=cap.read()
-    imgS=cv2.resize(img,(0,0),None,0.25,0.25)
-    imgS=cv2.cvtColor(imgS,cv2.COLOR_BGR2RGB)
-    facescurFrame=face_recognition.face_locations(imgS)
-    encodecurFrame=face_recognition.face_encodings(imgS,facescurFrame)
-    for encodeFace,FaceLoc in zip(encodecurFrame,facescurFrame):
-        #Start Face Recognition
-        matches=face_recognition.compare_faces(encodeKnownImage,encodeFace)
-        #name="Unknown"
-        faceDis=face_recognition.face_distance(encodeKnownImage,encodeFace)
-        #print(faceDis)
-        matchIndex=np.argmin(faceDis)
+    succes, img = cap.read()
+    imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
+    imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
+    facescurFrame = face_recognition.face_locations(imgS)
+    encodecurFrame = face_recognition.face_encodings(imgS, facescurFrame)
+    for encodeFace, FaceLoc in zip(encodecurFrame, facescurFrame):
+        # Start Face Recognition
+        matches = face_recognition.compare_faces(encodeKnownImage, encodeFace)
+        # name="Unknown"
+        faceDis = face_recognition.face_distance(encodeKnownImage, encodeFace)
+        # print(faceDis)
+        matchIndex = np.argmin(faceDis)
         if matches[matchIndex]:
-            #name=name[matchIndex]
-            Identity=name[matchIndex]
-        #else:
-            #name="Unknown"
-            # print(Identity)
-        #End Face Recognition
-    
-        #print(FaceLoc)
-            y1,x2,y2,x1=FaceLoc
-            y1, x2, y2, x1=y1*4,x2*4,y2*4,x1*4
-            #Bounding Box
-            cv2.rectangle(img,(x1,y1),(x2,y2),(0,255,0),3)
-            #Start Nama User
-            cv2.rectangle(img,(x1,y2-35),(x2,y2),(0,255,0),2,cv2.FILLED)
-            cv2.putText(img,Identity,(x1+6,y2-6),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),2)
-            #Data User Di Laporan
+            # name=name[matchIndex]
+            Identity = name[matchIndex]
+        else:
+            Identity = "Alfa"  # Penambahan
+        # End Face Recognition
+
+        # print(FaceLoc)
+        y1, x2, y2, x1 = FaceLoc
+        y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
+        # Bounding Box
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+        # Start Nama User
+        cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), 2, cv2.FILLED)
+        cv2.putText(img, Identity, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+        # Data User Di Laporan
+        if not laporan_dibuat:
             markAttendance(Identity)
-            #End Nama User 
-#End Akses Webcam dan Identifikasi Wajah
-    cv2.imshow("Presensi Face Recogniton Untuk Siswa",img)
-    #cv2.waitKey(1)
-    #=========================================
-    #if cv2.waitKey(0) & 0xFF ==ord('k'):
+            laporan_dibuat = True  # Tandai bahwa laporan sudah dibuat
+        # End Nama User
+
+    # End Akses Webcam dan Identifikasi Wajah
+    cv2.imshow("Presensi Face Recognition Untuk Siswa", img)
+    # cv2.waitKey(1)
+    # =========================================
+    # if cv2.waitKey(0) & 0xFF ==ord('k'):
     #    break
-    #cap.release()
-    #cv2.destroyAllWindows()
-    #=========================================
+    # cap.release()
+    # cv2.destroyAllWindows()
+    # =========================================
     k = cv2.waitKey(30) & 0xff
-    if k == 27: # tekan 'ESC' buat keluar
+    if k == 27:  # tekan 'ESC' buat keluar
         break
 cap.release()
 cv2.destroyAllWindows()
-#'''
-#End Akses Webcam
+# End Akses Webcam
 
-#Jika data user tidak ada di data base, maka user tidak dapat melakukan presensi 
+# Jika data user tidak ada di database, maka user tidak dapat melakukan presensi
 # atau tidak muncul rectangle di wajah user
